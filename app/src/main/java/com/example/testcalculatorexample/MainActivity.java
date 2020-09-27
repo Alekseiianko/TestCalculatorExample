@@ -1,12 +1,14 @@
 package com.example.testcalculatorexample;
 
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Toast;
 
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
 
@@ -26,6 +28,7 @@ public class MainActivity extends AppCompatActivity {
     private static final char SUBTRACTION = '-';
     private static final char MULTIPLICATION = '*';
     private static final char DIVISION = '/';
+    private static final String REGEX = "(?<=\\d)(?=\\D)|(?<=\\D)(?=\\d)";
 
     private char CURRENT_ACTION;
 
@@ -193,7 +196,7 @@ public class MainActivity extends AppCompatActivity {
                 String result = decimalFormat.format(valueOne);
                 binding.infoTextView.setText(result);
                 binding.editText.setText("");
-                double resultDouble = ParseDouble(result);
+                double resultDouble = parseDouble(result);
                 valueOne = resultDouble;
                 CURRENT_ACTION = '0';
             }
@@ -238,82 +241,59 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void computeCalculation() {
+        String expression = binding.editText.getText().toString();
+        String[] split = expression.split(REGEX);
+        List<String> splitList = new ArrayList<>();
+        splitList = Arrays.asList(split);
+        StringBuilder sb = new StringBuilder();
         if (!Double.isNaN(valueOne)) {
-
-            String expression = binding.editText.getText().toString();
-            String[] split = expression.split("(?<=\\d)(?=\\D)|(?<=\\D)(?=\\d)");
-            List<String> splitList = new ArrayList<>();
-            splitList = Arrays.asList(split);
-            StringBuilder str = new StringBuilder();
-            if (splitList.get(splitList.size() - 1).equals(".")) {
-                if (splitList.size() == 3) {
-                    try {
-                        valueTwo = ParseDouble(splitList.get(3));
-                    } catch (ArrayIndexOutOfBoundsException e) {
-                        Toast.makeText(getApplicationContext(), "Enter any numeric", Toast.LENGTH_SHORT).show();
+            for (int i = 0; i < splitList.size(); i++) {
+                if (splitList.get(i).equals("*") || splitList.get(i).equals("/") ||
+                        splitList.get(i).equals("-") || splitList.get(i).equals("+")) {
+                    for (int j = i + 1; j < splitList.size(); j++) {
+                        sb.append(splitList.get(j));
                     }
-                } else if (splitList.size() > 3) {
-                    for (int i = 3; i < splitList.size(); i++) {
-                        str.append(splitList.get(i));
-                    }
-                    String secondValue = str.toString();
-                    valueTwo = ParseDouble(secondValue);
-                } else {
-                }
-            } else {
-                if (splitList.size() == 2) {
-                    try {
-                        valueTwo = ParseDouble(splitList.get(2));
-                    } catch (ArrayIndexOutOfBoundsException e) {
-                        Toast.makeText(getApplicationContext(), "Enter any numeric", Toast.LENGTH_SHORT).show();
-                    }
-                } else if (splitList.size() > 2) {
-                    for (int i = 2; i < splitList.size(); i++) {
-                        str.append(splitList.get(i));
-                    }
-                    String secondValue = str.toString();
-                    valueTwo = ParseDouble(secondValue);
-                } else {
+                    break;
                 }
             }
 
-            if (CURRENT_ACTION == ADDITION)
-                valueOne = this.valueOne + valueTwo;
-            else if (CURRENT_ACTION == SUBTRACTION)
-                valueOne = this.valueOne - valueTwo;
-            else if (CURRENT_ACTION == MULTIPLICATION)
-                valueOne = this.valueOne * valueTwo;
-            else if (CURRENT_ACTION == DIVISION)
-                valueOne = this.valueOne / valueTwo;
+            valueTwo = parseDouble(sb.toString());
+            calculate();
         } else {
             try {
-                String expression = binding.editText.getText().toString();
-                String[] split = expression.split("(?<=\\d)(?=\\D)|(?<=\\D)(?=\\d)");
-                List<String> splitList = new ArrayList<>();
-                splitList = Arrays.asList(split);
-                StringBuilder str = new StringBuilder();
-                if (splitList.size() > 1) {
-                    for (int i = 0; i < splitList.size(); i++) {
-                        str.append(splitList.get(i));
+                if (!splitList.isEmpty()) {
+                    for (String str : splitList) {
+                        sb.append(str);
                     }
-                    String secondValue = str.toString();
-                    valueOne = ParseDouble(secondValue);
+                    String secondValue = sb.toString();
+                    valueOne = parseDouble(secondValue);
                 } else {
-                    valueOne = ParseDouble(binding.editText.getText().toString());
+                    valueOne = parseDouble(binding.editText.getText().toString());
                 }
             } catch (Exception e) {
             }
         }
     }
 
-    private double ParseDouble(String strNumber) {
+    private void calculate() {
+        if (CURRENT_ACTION == ADDITION)
+            valueOne = this.valueOne + valueTwo;
+        else if (CURRENT_ACTION == SUBTRACTION)
+            valueOne = this.valueOne - valueTwo;
+        else if (CURRENT_ACTION == MULTIPLICATION)
+            valueOne = this.valueOne * valueTwo;
+        else if (CURRENT_ACTION == DIVISION)
+            valueOne = this.valueOne / valueTwo;
+    }
+
+    private double parseDouble(String strNumber) {
         if (strNumber != null && strNumber.length() > 0) {
             try {
                 return Double.parseDouble(strNumber);
             } catch (Exception e) {
                 return -1;
             }
-        } else return 0;
+        } else return valueOne;
     }
 
     private void changeActivity() {
@@ -328,6 +308,7 @@ public class MainActivity extends AppCompatActivity {
                         Intent intent = new Intent(MainActivity.this, SecretActivity.class);
                         startActivity(intent);
                     } else {
+                        valueOne = Double.NaN;
                         binding.editText.setText("");
                     }
 
