@@ -1,17 +1,13 @@
 package com.example.testcalculatorexample;
 
 import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Toast;
 
-
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
-
 
 import com.example.testcalculatorexample.databinding.ActivityMainBindingImpl;
 
@@ -129,20 +125,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        binding.openBracket.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                binding.editText.setText(binding.editText.getText() + "(");
-            }
-        });
-
-        binding.closeBracket.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                binding.editText.setText(binding.editText.getText() + ")");
-            }
-        });
-
         binding.buttonAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -241,12 +223,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void computeCalculation() {
-        String expression = binding.editText.getText().toString();
-        String[] split = expression.split(REGEX);
-        List<String> splitList = new ArrayList<>();
-        splitList = Arrays.asList(split);
-        StringBuilder sb = new StringBuilder();
         if (!Double.isNaN(valueOne)) {
+            String expression = binding.editText.getText().toString();
+            String[] split = expression.split(REGEX);
+            List<String> splitList = new ArrayList<>();
+            splitList = Arrays.asList(split);
+            StringBuilder sb = new StringBuilder();
             for (int i = 0; i < splitList.size(); i++) {
                 if (splitList.get(i).equals("*") || splitList.get(i).equals("/") ||
                         splitList.get(i).equals("-") || splitList.get(i).equals("+")) {
@@ -260,18 +242,7 @@ public class MainActivity extends AppCompatActivity {
             valueTwo = parseDouble(sb.toString());
             calculate();
         } else {
-            try {
-                if (!splitList.isEmpty()) {
-                    for (String str : splitList) {
-                        sb.append(str);
-                    }
-                    String secondValue = sb.toString();
-                    valueOne = parseDouble(secondValue);
-                } else {
-                    valueOne = parseDouble(binding.editText.getText().toString());
-                }
-            } catch (Exception e) {
-            }
+            valueOne = parseDouble(binding.editText.getText().toString());
         }
     }
 
